@@ -25,9 +25,13 @@ docker-compose run task php ./Console/kmaTasksCommand.php bash
 ##### RabbitMQ
 
 Подключение к rabbit:
-host: http://127.0.0.1:15673 
+
+host: http://127.0.0.1:15673
+
 user: admin
+
 password: 1234
+
 ----
 
 
