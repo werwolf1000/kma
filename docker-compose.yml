@@ -1,0 +1,123 @@
+services:
+  task:
+    build:
+      context: .
+      dockerfile: ./apps/task/docker/php/Dockerfile
+      target: development
+    env_file:
+      - apps/task/.env
+    environment:
+      DISABLE_DEFAULT_SERVER: 1
+      PHP_IDE_CONFIG: "serverName=taskApp"
+      XDEBUG_CONFIG: idekey=PHPSTORM remote_host=host.docker.internal remote_port=9081
+      TZ: Europe/Moscow
+    working_dir: /var/www
+    depends_on:
+      - mysql-task
+      - rabbitmq
+    volumes:
+      - ./apps/task:/var/www
+      - ./apps/task/docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./vendor:/var/www/vendor/
+    ports:
+      - 9081:9081
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tty: true
+    stdin_open: true
+  handler:
+    build:
+      context: .
+      dockerfile: ./apps/handler/docker/php/Dockerfile
+      target: development
+    command: php /var/www/Console/kmaHandlerCommand.php
+    restart: always
+    env_file:
+      - ./apps/handler/.env
+    environment:
+      DISABLE_DEFAULT_SERVER: 1
+      PHP_IDE_CONFIG: "serverName=HandlerApp"
+      XDEBUG_CONFIG: idekey=PHPSTORM remote_host=host.docker.internal remote_port=9082
+      TZ: Europe/Moscow
+    working_dir: /var/www
+    depends_on:
+      - clickhouse-server
+      - mysql-handler
+      - rabbitmq
+    volumes:
+      - ./apps/handler:/var/www
+      - ./apps/handler/docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./vendor:/var/www/vendor/
+    ports:
+      - 9082:9082
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tty: true
+    stdin_open: true
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: "rabbit.local"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: ${AMQP_USER}
+      RABBITMQ_DEFAULT_PASS: ${AMQP_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15673:15672"
+      - "5673:5672"
+    labels:
+      NAME: "rabbit.local"
+  mysql-task:
+    image: mariadb:10
+    command: --default-authentication-plugin=mysql_native_password --sort_buffer_size=2M
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_DATABASE: ${MYSQL_NAME}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: 'Europe/Moscow'
+    ports:
+      - 3307:3306
+    volumes:
+      - ./apps/task/docker/mysql/data:/var/lib/mysql
+      - ./apps/task/docker/mysql/dump/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./apps/task/docker/mysql/dump/init_data/urls.csv:/var/dump/urls.csv
+
+  mysql-handler:
+    image: mariadb:10
+    command: --default-authentication-plugin=mysql_native_password --sort_buffer_size=2M
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_DATABASE: ${MYSQL_NAME}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: 'Europe/Moscow'
+    ports:
+      - 3308:3306
+    volumes:
+      - ./apps/handler/docker/mysql/data:/var/lib/mysql
+      - ./apps/handler/docker/mysql/dump/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  clickhouse-server:
+    image: yandex/clickhouse-server
+    ports:
+      - "8124:8123"
+      - "9200:9000"
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-default}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:?InvalidClickhouseUser}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?InvalidClickhousePassword}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    depends_on:
+      - mysql-handler
+    volumes:
+      - ./apps/handler/docker/clickhouse/data:/var/lib/clickhouse
+      - ./apps/handler/docker/clickhouse/clickhouse-users.xml:/etc/clickhouse-server/users.xml:ro
+      - ./apps/handler/docker/clickhouse/clickhouse-config.xml:/etc/clickhouse-server/config.xml:ro
+      - ./apps/handler/docker/clickhouse/dump/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144

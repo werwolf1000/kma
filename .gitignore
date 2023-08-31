@@ -1,0 +1,3 @@
+/apps/handler/docker/clickhouse/data
+/apps/handler/docker/mysql/data
+/apps/task/docker/mysql/data
