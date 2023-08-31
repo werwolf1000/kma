@@ -14,12 +14,14 @@ docker-compose run task php ./Console/kmaTasksCommand.php bash
 
 Программа состоит из двух сервисов, сервис task и сервис handler связаны между собой посредство rabbitmq шины + папка /vendor, подключается как библиотека
 
+![img.png](img.png)
+
 ----
 
 ##### RabbitMQ
 Подключение к rabbit:
-host: http://127.0.0.1:15673 \
-user: admin \
+host: http://127.0.0.1:15673 
+user: admin
 password: 1234
 ----
 
