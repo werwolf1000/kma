@@ -1,8 +1,9 @@
 <?php
 require_once dirname(__DIR__).'/autoload.php';
-require_once dirname(__DIR__).'/ini.php';
+
 
 try {
+    (new \vendor\Env(dirname(__DIR__).'/.env'))->load();
     $rmq = new \vendor\RabbitMQ();
     $rmq->listen($_ENV['AMQP_QUEUE'], new \queue\KmaTaskHandler());
 

@@ -1,8 +1,9 @@
 <?php
 require_once dirname(__DIR__).'/autoload.php';
-require_once dirname(__DIR__).'/ini.php';
+
 
 try {
+    (new \vendor\Env(dirname(__DIR__).'/.env'))->load();
     $controller = new \Controllers\KmaTaskController();
     $controller->taskToRabbit();
 } catch (\Exception $e) {

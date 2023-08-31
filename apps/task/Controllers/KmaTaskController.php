@@ -16,9 +16,9 @@ class KmaTaskController
         $urls = $this->getUrls();
         $rmq = new RabbitMQ();
         foreach ($urls as $key => $item) {
-            echo "{$key} => {$item}".PHP_EOL;
+            echo "{$key} => {$item->urls}".PHP_EOL;
             $rmq->execute($item->urls, 'task');
-            sleep(30);
+            sleep(15);
         }
         $rmq->close();
         print PHP_EOL."__________отправка завершена__________".PHP_EOL;
