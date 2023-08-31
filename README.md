@@ -5,25 +5,31 @@ docker-compose up -d --no-deps --build
 ```
 
 Запуск программы
+
 ```shell
 docker-compose run task php ./Console/kmaTasksCommand.php bash
 ```
+
 
 
 Все таблицы создаются в процессе сборки контейнеров, url адреса хранятся в файлике apps/task/docker/mysql/dump/init_data/urls.csv, после того как контейнеры будут собраны из файлика данные будут залиты в базу
 
 Программа состоит из двух сервисов, сервис task и сервис handler связаны между собой посредство rabbitmq шины + папка /vendor, подключается как библиотека
 
+
 ![img.png](img.png)
+
 
 ----
 
 ##### RabbitMQ
+
 Подключение к rabbit:
 host: http://127.0.0.1:15673 
 user: admin
 password: 1234
 ----
+
 
 ##### MYSQL
 Подключение к базе:
